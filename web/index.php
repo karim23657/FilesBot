@@ -23,7 +23,7 @@ $chat = $message->chat;
 $user_id = $chat->id;
 
 function tgmsg ($txt,$token,$user_id){
-	 $url = 'https://api.telegram.org/bot1304663311:AAGStDkLpKkYFNf73wivgjXmvnca5eESxY8/sendMessage?chat_id='.$user_id.'&text='.$txt;
+	 $url = 'https://api.telegram.org/bot'.$token.'/sendMessage?chat_id='.$user_id.'&text='.$txt;
      file_get_contents($url);
 }
 
