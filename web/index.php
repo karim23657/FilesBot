@@ -8,94 +8,92 @@ $bot = new PHPBot($bot_id);
 $content = file_get_contents("php://input");
 $update = json_decode($content, true);
 
-if (isset($update["message"])) {
-    $message_id = $update["message"]["message_id"];
-    $chat_id = $update["message"]["chat"]["id"];
 
-    if (isset($update["message"]["text"])) {
-        $message_text = $update["message"]["text"];
-        if (strpos($message_text, "/start ") !== FALSE) {
-            $message_params = explode(" ", $message_text);
-            if (strpos($message_params[1], "_") !== FALSE) {
-                $msg_param_s = explode("_", $message_params[1]);
-                $req_message_id = $msg_param_s[1];
-                try {
-                    $bot->api->forwardMessage(array(
-                        "chat_id" => $chat_id,
-                        "from_chat_id" => $GLOBALS["TG_DUMP_CHANNEL_ID"],
-                        "disable_notification" => True,
-                        "message_id" => $req_message_id
-                    ));
-                }
-                catch (Exception $e) {
-                    /**
-                     * sometimes, forwarding FAILS 😉
-                     */
-                }
-            }
-            else {
-                $bot->api->deleteMessage(array(
-                    "chat_id" => $chat_id,
-                    "message_id" => $message_id
-                ));
-            }
-        }
-        else if (strpos($message_text, "/start") !== FALSE) {
-            $bot->api->sendMessage(array(
-                "chat_id" => $chat_id,
-                "text" => $GLOBALS["START_MESSAGE"],
-                "parse_mode" => "HTML",
-                "disable_notification" => True,
-                "reply_to_message_id" => $message_id
-            ));
-        }
-        else {
-            $bot->api->deleteMessage(array(
-                "chat_id" => $chat_id,
-                "message_id" => $message_id
-            ));
-        }
-    }
-    else {
-        if ($GLOBALS["IS_PUBLIC"] !== FALSE) {
-            get_link($bot, $chat_id, $message_id);
-        }
-        else if (in_array($chat_id, $GLOBALS["TG_AUTH_USERS"])) {
-            get_link($bot, $chat_id, $message_id);
-        }
-        else {
-            $bot->api->deleteMessage(array(
-                "chat_id" => $chat_id,
-                "message_id" => $message_id
-            ));
-        }
-    }
+$token = $bot_id;
+// read incoming info and grab the chatID 
+$json = file_get_contents('php://input');
+$telegram = urldecode ($json);
+$telegram = str_replace ('jason=','',$telegram); //Just for Teletter.net
+$results = json_decode($telegram); 
+
+
+$message = $results->message;
+$text = $message->text;
+$chat = $message->chat;
+$user_id = $chat->id;
+
+function tgmsg ($txt,$token,$user_id){
+	 $url = 'https://api.telegram.org/bot1304663311:AAGStDkLpKkYFNf73wivgjXmvnca5eESxY8/sendMessage?chat_id='.$user_id.'&text='.$txt;
+     file_get_contents($url);
+}
+
+switch ($text) {
+	case '/start':
+	$txt = "سلام کاربر گرامی  \n /start \n /date \n سلام \n /id \n /second \n /server \n اذان" ;
+	tgmsg ($txt,$token,$user_id);
+	break;
+	case '/date':
+	date_default_timezone_set("Iran"); 
+	$txt = "امروز" ;
+	tgmsg ($txt,$token,$user_id);
+	$txt = 'ساعت'.'='.'      '. date("h:i:sa"); 
+	tgmsg ($txt,$token,$user_id);
+	$txt = 'یا به عبارتی'.'='.'      '. date("H:i:s"); 
+	tgmsg ($txt,$token,$user_id);
+	$txt = "تاریخ" .'='.'      '. date("Y-m-d") ;
+	tgmsg ($txt,$token,$user_id);
+	$txt = "روز هفته" .'='.'      '. date("l") ;
+	tgmsg ($txt,$token,$user_id);
+	break;
+	case 'سلام':
+	$txt = 'سلام علیکم' ;
+	tgmsg ($txt,$token,$user_id);
+	break;
+	case '/id':
+	$txt = $user_id ;
+	tgmsg ($txt,$token,$user_id);
+	break;
+	case '/second':
+	$txt = date("s");
+	tgmsg ($txt,$token,$user_id);
+	break;
+	case '/server':
+    $direname = getcwd();
+    $freesp = round(disk_free_space($direname)/1000000000,3);
+    $totsp = round(disk_total_space($direname)/1000000000,3);
+    $percentsp = round($freesp/$totsp*100,2);
+    $percusdsp = 100-$percentsp;
+	$df1 = $_SERVER['PHP_SELF']."\n".$_SERVER['HTTP_REFERER']."\n".$_SERVER['HTTP_USER_AGENT']."\n".$_SERVER['SCRIPT_NAME']."\n\n";
+    $txt = "$df1 Free space :$freesp Gb \n Total space :$totsp Gb\n$percentsp % free\n$percusdsp % used";  
+	tgmsg ($txt,$token,$user_id);
+	break;
+	case 'اذان';
+	$json1 = file_get_contents('https://prayer.aviny.com/api/prayertimes/643');
+    $avini = urldecode ($json1);
+    $avinijs = json_decode($avini);
+    $azsobh = $avinijs->Imsaak;
+    $azzohr = $avinijs->Noon;
+    $azmaghreb = $avinijs->Maghreb;
+    $aftolu = $avinijs->Sunrise;
+    $afghor = $avinijs->Sunset;
+    $animesh = $avinijs->Midnight;
+	$Today = $avinijs->Today;
+	$TodayQamari = $avinijs->TodayQamari;
+	$txt = "امروز:$Today \n الیوم:$TodayQamari \n اذان صبح:$azsobh  \n طلوع آفتاب: $aftolu \n اذان ظهر:$azzohr  \n اذان مغرب: $azmaghreb \n غروب آفتاب $afghor \n نیمه شب شرعی : $animesh";
+	tgmsg ($txt,$token,$user_id);
+	break;
+	default:
+	$txt = "؟ $text یعنی مخای بگی";
+	tgmsg ($txt,$token,$user_id);
 }
 
 
-function get_link($bot, $chat_id, $message_id) {
-    $status_message = $bot->api->sendMessage(array(
-        "chat_id" => $chat_id,
-        "text" => $GLOBALS["CHECKING_MESSAGE"],
-        "parse_mode" => "HTML",
-        "disable_web_page_preview" => True,
-        "disable_notification" => True,
-        "reply_to_message_id" => $message_id
-    ));
 
-    $req_message = $bot->api->forwardMessage(array(
-        "chat_id" => $GLOBALS["TG_DUMP_CHANNEL_ID"],
-        "from_chat_id" => $chat_id,
-        "disable_notification" => True,
-        "message_id" => $message_id
-    ));
 
-    $required_url = "https://t.me/" . $GLOBALS["TG_BOT_USERNAME"] . "?start=" . "view" . "_" . $req_message->message_id . "_" . "tg";
 
-    $bot->api->editMessageText(array(
-        "chat_id" => $chat_id,
-        "message_id" => $status_message->message_id,
-        "text" => $required_url,
-        "disable_web_page_preview" => True
-    ));
-}
+
+
+
+
+
+
