@@ -1,6 +1,6 @@
 <?php
 $file_name = $_FILES['UploadedFile']['name'];
-$target_path = "uploads/".$file_name;
+$target_path = $file_name;
 if(move_uploaded_file($_FILES['UploadedFile']['tmp_name'], $target_path)) {
 echo "فایل ". $file_name ." با موفقیت آپلود شد";}
 else {
