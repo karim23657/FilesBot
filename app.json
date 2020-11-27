@@ -30,13 +30,6 @@
             "size": "free"
         }
     },
-     "addons": [
-    {
-      "plan": "jawsdb-maria:kitefin"
-    },
-    {
-      "plan": "heroku-postgresql:hobby-dev"
-    }
-  ],
+   
   "stack": "heroku-20"
 }
